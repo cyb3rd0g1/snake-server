@@ -4,7 +4,7 @@ const players = {};
 let player = 0;
 const width = 20;
 const height = 20;
-const gameState =  new Array(height).fill(0).map(() => new Array(width).fill("."));
+let gameState =  new Array(height).fill(0).map(() => new Array(width).fill("."));
 
       /*
         0: down
@@ -13,12 +13,14 @@ const gameState =  new Array(height).fill(0).map(() => new Array(width).fill("."
         3: right
       */
 function reset() {
-	gamestate = new Array(height).fill(0).map(() => new Array(width).fill("."));
+	gameState = new Array(height).fill(0).map(() => new Array(width).fill("."));
+	placeFood();
+	io.emit('gamestate', gameState);
+	player = 0;
 	Object.keys(players).forEach(player => {
 		players[player].socket.disconnect();
 		delete players[player];
 	});
-	io.emit('gamestate', gameState);
 }
 
 function placeFood(){
