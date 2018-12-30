@@ -4,6 +4,9 @@ const players = {};
 let player = 0;
 const width = 40;
 const height = 40;
+const respawnTimer = 3000;
+const startDelay = 2000;
+const foodPlacement = 20000;
 let colors = {};
 let gameState =  new Array(height).fill(0).map(() => new Array(width).fill("."));
 
@@ -31,9 +34,40 @@ function validatePlayerPosition (position) {
 	let y = position[0];
 	let x = position[1];
 
+	//TODO check that player is at least three moves away from a wall or another player
+	/* Search this area for collisions
+		   .          Y + 3
+		  ...         Y + 2 & X + - 1
+		 .....        Y + 1 & X + - 2
+		...X...       X + - 3
+		 .....        Y - 1 & X + - 2
+	      ...         Y - 2 & X + - 1
+		   .          Y - 3
+	*/
+	// Huge if block to check if player is 2 to the left right up or down of an object.
 	if(gameState[y][x] !== "."){
 		return false;
-	} 
+	}else if(y < 3 || y > height - 3) {
+		return false;
+	}else if(x < 3 || x > width - 3) {
+		return false;
+	}else if(gameState[y+1][x] !== "."){
+		return false;
+	}else if(gameState[y+2][x] !== "."){
+		return false;
+	}else if(gameState[y-1][x] !== "."){
+		return false;
+	}else if(gameState[y-2][x] !== "."){
+		return false;
+	}else if(gameState[y][x+1] !== "."){
+		return false;
+	}else if(gameState[y][x+2] !== "."){
+		return false;
+	}else if(gameState[y][x-1] !== "."){
+		return false;
+	}else if(gameState[y][x-2] !== "."){
+		return false;
+	}
 	return true;
 }
 
@@ -63,21 +97,10 @@ function randomizePlayerPosition(playerID) {
 	players[playerID].tailDirections = [direction];
 	players[playerID].alive = false;
 	
-	//Delay the snake movement for 2 seconds
+	//Delay the snake movement
 	setTimeout(() => {
 		setPlayerAlive(playerID);
-	 }, 2000);
-	
-	//TODO check that player is at least three moves away from a wall or another player
-	/* Search this area for collisions
-		   .          Y + 3
-		  ...         Y + 2 & X + - 1
-		 .....        Y + 1 & X + - 2
-		...X...       X + - 3
-		 .....        Y - 1 & X + - 2
-	      ...         Y - 2 & X + - 1
-		   .          Y - 3
-	*/
+	 }, startDelay);
 }
 
 function placeFood(){
@@ -86,9 +109,20 @@ function placeFood(){
       	while(gameState[y][x] !== "."){
         	y = Math.floor(Math.random() * height);
         	x = Math.floor(Math.random() * width);
-      	}
-      
-      	gameState[y][x] = "@";
+		}
+		gameState[y][x] = "@";
+		//Starts 15 second timer to check if the food is ate.
+		setTimeout(() => {
+			checkFoodPlacement(y,x);
+		}, foodPlacement);
+}
+
+function checkFoodPlacement(y,x) {
+	//Checks if food has not moved. If so then reset food
+	if(gameState[y][x] === "@") {
+		gameState[y][x] = ".";
+		placeFood();
+	}
 }
 
 function killSnake(playerID) {
@@ -114,10 +148,10 @@ function spawnDeadPlayer(player) {
 	if(players[player].alive === false) {
 		//Spawn the player
 		randomizePlayerPosition(player);
-		//Wait 2 seconds before setting player alive so the snake is stationary.
+		//Wait before setting player alive so the snake is stationary.
 		setTimeout(() => {
 			setPlayerAlive(player);
-		 }, 2000);
+		 }, startDelay);
 	}
 }
 
@@ -146,7 +180,7 @@ function move() {
 					players[player].alive = false;
 					setTimeout(() => {
 						spawnDeadPlayer(player);
-					 }, 3000);
+					 }, respawnTimer);
 					return;
 				}
 
@@ -200,12 +234,12 @@ function playerMoveEvent(data, newPlayer) {
 	}else if(data === "right" && headDirection !== 2){
 		headDirection = 3;
 	}	
-
+	
 	if(headDirection !== players[newPlayer].headDirection){
 		tailDirections.pop();
 		tailDirections.push(headDirection);
 	}
-
+	
 	players[newPlayer].headDirection = headDirection;
 	players[newPlayer].tailDirections = [ ...tailDirections ];
 }
