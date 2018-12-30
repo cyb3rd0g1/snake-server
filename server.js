@@ -1,12 +1,13 @@
 const io = require('socket.io')();
-const port = 1337;
+const config = require('./config.json');
+const port = config.GameSettings.port;
 const players = {};
 let player = 0;
-const width = 40;
-const height = 40;
-const respawnTimer = 3000;
-const startDelay = 2000;
-const foodPlacement = 20000;
+const width = config.GameSettings.width;
+const height = config.GameSettings.height;
+const respawnTimer = config.GameSettings.respawnTimer;
+const startDelay = config.GameSettings.startDelay;
+const foodPlacement = config.GameSettings.foodPlacement;
 let colors = {};
 let gameState =  new Array(height).fill(0).map(() => new Array(width).fill("."));
 
@@ -72,6 +73,7 @@ function validatePlayerPosition (position) {
 }
 
 function setPlayerAlive(playerID) {
+	//BUG Check if player is valid before setting alive! This is a delayed task!
 	players[playerID].alive = true;
 }
 
