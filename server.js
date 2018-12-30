@@ -194,7 +194,7 @@ function getRandomColor() {
 
 function randomizePlayerColor(playerID) {
 	colors[playerID] = getRandomColor();
-	io.socket.emit('colors', colors);
+	io.emit('colors', colors);
 }
 
 function setPlayerStart(socket) {
