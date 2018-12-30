@@ -2,8 +2,8 @@ const io = require('socket.io')();
 const port = 1337;
 const players = {};
 let player = 0;
-const width = 20;
-const height = 20;
+const width = 50;
+const height = 50;
 let gameState =  new Array(height).fill(0).map(() => new Array(width).fill("."));
 
       /*
@@ -15,12 +15,12 @@ let gameState =  new Array(height).fill(0).map(() => new Array(width).fill("."))
 function reset() {
 	gameState = new Array(height).fill(0).map(() => new Array(width).fill("."));
 	placeFood();
-	io.emit('gamestate', gameState);
-	player = 0;
 	Object.keys(players).forEach(player => {
-		players[player].socket.disconnect();
+		setPlayerStart(players[player].socket);
 		delete players[player];
 	});
+	player = 0;
+	io.emit('gamestate', gameState);
 }
 
 function placeFood(){
@@ -53,7 +53,7 @@ function move() {
 			}else if (headDirection === 3 && (head[1] + 1 < width) && ((gameState[head[0]][head[1] + 1 ] === ".") || (gameState[head[0]][head[1] + 1 ] === "*"))){
 				head = [head[0], ++head[1]];
 			}else{
-				players[player].socket.disconnect();
+				setPlayerStart(players[player].socket);
 				delete players[player];
 				return;
 			}
@@ -85,35 +85,16 @@ function move() {
 		io.emit('gamestate', gameState);
 	}
 }
-function setPlayerStart(player) {
-	let starty = Math.floor(height/2);
-	let startx = Math.floor(width/2);
-	
-	//TODO: randomize start location for new players, for now we will just start at the center of the board
-	/*while (gameState[starty][startx] !== ".") {
-		starty = Math.floor(height/2);
-		startx = Math.floor(width/2);
-	}*/
-	
-	let direction = Math.floor(Math.random() * 4);
-	gameState[starty][startx] = player;
-	
-	players[player].head = [starty, startx];
-	players[player].tail = [starty, startx];
-	players[player].headDirection = direction;
-	players[player].tailDirections = [direction];
+
+//Called by reset Listener
+function playerResetEvent() {
+	console.log("resetting...");
+	reset();
 }
 
-io.on('connection', (socket) => {
-	let newPlayer = player;
-	++player;
-	console.log("connection established for player ", newPlayer);
-	players[newPlayer] = {socket: socket};
-	setPlayerStart(newPlayer);
-
-	//register movement listener
-	players[newPlayer].socket.on('move', (data) => {
-		console.log(data);
+//Called by Move listener
+function playerMoveEvent(data, newPlayer) {
+	console.log(data);
 
 		var headDirection = players[newPlayer].headDirection;
       		var tailDirections = [ ...players[newPlayer].tailDirections ];
@@ -135,24 +116,68 @@ io.on('connection', (socket) => {
 
         	players[newPlayer].headDirection = headDirection;
         	players[newPlayer].tailDirections = [ ...tailDirections ];
+}
 
-	});
+function clearPlayerSocket(player) {
+	player.socket.removeAllListeners();
+}
+
+function setPlayerStart(socket) {
+
+	//Verify we dont have any active listeners on a socket.
+	socket.removeAllListeners();
+
+	//Build player object from Socket
+	let newPlayer = player;
+	++player;
+	players[newPlayer] = {socket: socket};
+
+	let starty = Math.floor(height/2);
+	let startx = Math.floor(width/2);
+	
+	//TODO: randomize start location for new players, for now we will just start at the center of the board
+	/*while (gameState[starty][startx] !== ".") {
+		starty = Math.floor(height/2);
+		startx = Math.floor(width/2);
+	}*/
+	
+	let direction = Math.floor(Math.random() * 4);
+	gameState[starty][startx] = newPlayer;
+	
+	players[newPlayer].head = [starty, startx];
+	players[newPlayer].tail = [starty, startx];
+	players[newPlayer].headDirection = direction;
+	players[newPlayer].tailDirections = [direction];
+
+	//register movement listener
+	players[newPlayer].socket.on('move', (data) => playerMoveEvent(data, newPlayer));
 
 	//register reset event
-	players[newPlayer].socket.on('reset', () => {
-		console.log("resetting...");
-		reset();
+	players[newPlayer].socket.on('reset', playerResetEvent);
+
+	//register player disconnect
+	players[newPlayer].socket.on('disconnect', () => {
+		players[newPlayer].socket.disconnect();
+		delete players[newPlayer];
 	});
 
+	//Return gamestate to client
 	io.emit('gamestate', gameState);
-	
+}
+
+//On connection start new Player and handle sockets
+io.on('connection', (socket) => {
+	setPlayerStart(socket);	
 });
 
+//Initial place food call
 placeFood();
 
+//Set update timer
 setInterval(() => {
 	move();
 }, 200);
 
+//Starts the server listener
 io.listen(port);
 console.log('Listening on port ' + port + '...');
