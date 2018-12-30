@@ -2,8 +2,9 @@ const io = require('socket.io')();
 const port = 1337;
 const players = {};
 let player = 0;
-const width = 50;
-const height = 50;
+const width = 40;
+const height = 40;
+let colors = {};
 let gameState =  new Array(height).fill(0).map(() => new Array(width).fill("."));
 
       /*
@@ -192,6 +193,20 @@ function playerMoveEvent(data, newPlayer) {
         	players[newPlayer].tailDirections = [ ...tailDirections ];
 }
 
+function getRandomColor() {
+	var letters = '0123456789ABCDEF';
+	var color = '#';
+	for (var i = 0; i < 6; i++) {
+	  color += letters[Math.floor(Math.random() * 16)];
+	}
+	return color;
+  }
+
+function randomizePlayerColor(playerID) {
+	colors[playerID] = getRandomColor();
+	players[playerID].socket.emit('colors', colors);
+}
+
 function setPlayerStart(socket) {
 
 	//Verify we dont have any active listeners on a socket.
@@ -203,6 +218,8 @@ function setPlayerStart(socket) {
 	players[newPlayer] = {socket: socket};
 
 	randomizePlayerPosition(newPlayer);
+
+	randomizePlayerColor(newPlayer); 
 
 	//register movement listener
 	players[newPlayer].socket.on('move', (data) => playerMoveEvent(data, newPlayer));
