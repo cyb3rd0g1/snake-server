@@ -89,6 +89,23 @@ function placeFood(){
       	gameState[y][x] = "@";
 }
 
+function killSnake(playerID) {
+	let tail = [ ...players[playerID].tail ];
+	while (players[playerID].tailDirections.length > 0){
+		let tailDirection = players[playerID].tailDirections.shift();
+		gameState[tail[0]][tail[1]] = "X";
+		if(tailDirection === 0 && (tail[0] + 1 < height)){
+			tail = [++tail[0], tail[1]];
+		}else if (tailDirection === 1 && (tail[0] - 1 >= 0)){
+			tail = [--tail[0], tail[1]];
+		}else if (tailDirection === 2 && (tail[1] - 1 >= 0)){
+			tail = [tail[0], --tail[1]];
+		}else if (tailDirection === 3 && (tail[1] + 1 < width)){
+			tail = [tail[0], ++tail[1]];
+		}	
+	}
+}
+
 function move() {
 	if (Object.keys(players).length > 0) {
 		Object.keys(players).forEach(player => {
@@ -110,6 +127,7 @@ function move() {
 			}else{
 				/*setPlayerStart(players[player].socket);
 				delete players[player];*/
+				killSnake(player);
 				randomizePlayerPosition(player);
 				return;
 			}
@@ -194,6 +212,7 @@ function setPlayerStart(socket) {
 
 	//register player disconnect
 	players[newPlayer].socket.on('disconnect', () => {
+		killSnake(newPlayer);
 		players[newPlayer].socket.disconnect();
 		delete players[newPlayer];
 	});
