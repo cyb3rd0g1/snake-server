@@ -20,7 +20,6 @@ function reset() {
 	//place food
 	placeFood();
 	//for each player
-	//player = 0;
 	Object.keys(players).forEach(player => {
 		console.log("Player: ", player );
 		randomizePlayerPosition(player);
@@ -35,7 +34,6 @@ function validatePlayerPosition (position) {
 	if(gameState[y][x] !== "."){
 		return false;
 	} 
-
 	return true;
 }
 
@@ -59,8 +57,8 @@ function randomizePlayerPosition(playerID) {
 	players[playerID].tail = [ ...position ];
 	players[playerID].headDirection = direction;
 	players[playerID].tailDirections = [direction];
-	//check that player is at least three spaces away from a wall or another player
-	//()
+	
+	//TODO check that player is at least three spaces away from a wall or another player
 
 	/* Search this area for collisions
 		   .
@@ -71,12 +69,6 @@ function randomizePlayerPosition(playerID) {
 	      ...
 		   .
 	*/
-
-	//determine direction of new player by  (objects in direction) * (sum of distances in objects for each quadrant)
-
-	
-
-
 }
 
 function placeFood(){
@@ -126,8 +118,6 @@ function move() {
 			}else if (headDirection === 3 && (head[1] + 1 < width) && ((gameState[head[0]][head[1] + 1 ] === ".") || (gameState[head[0]][head[1] + 1 ] === "@"))){
 				head = [head[0], ++head[1]];
 			}else{
-				/*setPlayerStart(players[player].socket);
-				delete players[player];*/
 				killSnake(player);
 				randomizePlayerPosition(player);
 				return;
@@ -204,7 +194,7 @@ function getRandomColor() {
 
 function randomizePlayerColor(playerID) {
 	colors[playerID] = getRandomColor();
-	players[playerID].socket.emit('colors', colors);
+	io.socket.emit('colors', colors);
 }
 
 function setPlayerStart(socket) {
