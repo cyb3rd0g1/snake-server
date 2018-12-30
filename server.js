@@ -86,7 +86,7 @@ function placeFood(){
         	x = Math.floor(Math.random() * width);
       	}
       
-      	gameState[y][x] = "*";
+      	gameState[y][x] = "@";
 }
 
 function move() {
@@ -99,22 +99,23 @@ function move() {
 
 			tailDirections.push(headDirection);
 
-			if(headDirection === 0 && (head[0] + 1 < height) && ((gameState[head[0] + 1][head[1]] === ".") || (gameState[head[0] + 1][head[1]] === "*"))){
+			if(headDirection === 0 && (head[0] + 1 < height) && ((gameState[head[0] + 1][head[1]] === ".") || (gameState[head[0] + 1][head[1]] === "@"))){
 				head = [++head[0], head[1]];
-			}else if (headDirection === 1 && (head[0] - 1 >= 0) && ((gameState[head[0] - 1][head[1]] === ".") || (gameState[head[0] - 1][head[1]] === "*"))){
+			}else if (headDirection === 1 && (head[0] - 1 >= 0) && ((gameState[head[0] - 1][head[1]] === ".") || (gameState[head[0] - 1][head[1]] === "@"))){
 				head = [--head[0], head[1]];
-			}else if (headDirection === 2 && (head[1] - 1 >= 0) && ((gameState[head[0]][head[1] - 1] === ".") || (gameState[head[0]][head[1] - 1] === "*"))){
+			}else if (headDirection === 2 && (head[1] - 1 >= 0) && ((gameState[head[0]][head[1] - 1] === ".") || (gameState[head[0]][head[1] - 1] === "@"))){
 				head = [head[0], --head[1]];
-			}else if (headDirection === 3 && (head[1] + 1 < width) && ((gameState[head[0]][head[1] + 1 ] === ".") || (gameState[head[0]][head[1] + 1 ] === "*"))){
+			}else if (headDirection === 3 && (head[1] + 1 < width) && ((gameState[head[0]][head[1] + 1 ] === ".") || (gameState[head[0]][head[1] + 1 ] === "@"))){
 				head = [head[0], ++head[1]];
 			}else{
-				setPlayerStart(players[player].socket);
-				delete players[player];
+				/*setPlayerStart(players[player].socket);
+				delete players[player];*/
+				randomizePlayerPosition(player);
 				return;
 			}
 
 			//conditional logic to determine if snake grows
-			if(gameState[head[0]][head[1]] !== "*"){
+			if(gameState[head[0]][head[1]] !== "@"){
 				let tailDirection = tailDirections.shift();
 				gameState[tail[0]][tail[1]] = ".";
 				if(tailDirection === 0 && (tail[0] + 1 < height)){
@@ -212,7 +213,7 @@ placeFood();
 //Set update timer
 setInterval(() => {
 	move();
-}, 200);
+}, 150);
 
 //Starts the server listener
 io.listen(port);
