@@ -12,15 +12,70 @@ let gameState =  new Array(height).fill(0).map(() => new Array(width).fill("."))
         2: left
         3: right
       */
+
 function reset() {
+	//fill board with .'s
 	gameState = new Array(height).fill(0).map(() => new Array(width).fill("."));
+	//place food
 	placeFood();
+	//for each player
+	//player = 0;
 	Object.keys(players).forEach(player => {
-		setPlayerStart(players[player].socket);
-		delete players[player];
+		console.log("Player: ", player );
+		randomizePlayerPosition(player);
 	});
-	player = 0;
 	io.emit('gamestate', gameState);
+}
+
+function validatePlayerPosition (position) {
+	let y = position[0];
+	let x = position[1];
+
+	if(gameState[y][x] !== "."){
+		return false;
+	} 
+
+	return true;
+}
+
+function randomizePlayerPosition(playerID) {
+
+	//choose random spawn for player
+	let position = [Math.floor(Math.random() * height), Math.floor(Math.random() * width)];
+	
+	//validate space
+	while(!validatePlayerPosition(position)){
+		position = [Math.floor(Math.random() * height), Math.floor(Math.random() * width)];
+	}
+
+	//if space is valid, set player head, and tail to current position and randomize head direction
+	let starty = position[0];
+	let startx = position[1]; 
+	let direction = Math.floor(Math.random() * 4);
+	gameState[starty][startx] = playerID;
+	
+	players[playerID].head = [ ...position ];
+	players[playerID].tail = [ ...position ];
+	players[playerID].headDirection = direction;
+	players[playerID].tailDirections = [direction];
+	//check that player is at least three spaces away from a wall or another player
+	//()
+
+	/* Search this area for collisions
+		   .
+		  ...
+		 .....
+		...X...
+		 .....
+	      ...
+		   .
+	*/
+
+	//determine direction of new player by  (objects in direction) * (sum of distances in objects for each quadrant)
+
+	
+
+
 }
 
 function placeFood(){
@@ -118,10 +173,6 @@ function playerMoveEvent(data, newPlayer) {
         	players[newPlayer].tailDirections = [ ...tailDirections ];
 }
 
-function clearPlayerSocket(player) {
-	player.socket.removeAllListeners();
-}
-
 function setPlayerStart(socket) {
 
 	//Verify we dont have any active listeners on a socket.
@@ -132,22 +183,7 @@ function setPlayerStart(socket) {
 	++player;
 	players[newPlayer] = {socket: socket};
 
-	let starty = Math.floor(height/2);
-	let startx = Math.floor(width/2);
-	
-	//TODO: randomize start location for new players, for now we will just start at the center of the board
-	/*while (gameState[starty][startx] !== ".") {
-		starty = Math.floor(height/2);
-		startx = Math.floor(width/2);
-	}*/
-	
-	let direction = Math.floor(Math.random() * 4);
-	gameState[starty][startx] = newPlayer;
-	
-	players[newPlayer].head = [starty, startx];
-	players[newPlayer].tail = [starty, startx];
-	players[newPlayer].headDirection = direction;
-	players[newPlayer].tailDirections = [direction];
+	randomizePlayerPosition(newPlayer);
 
 	//register movement listener
 	players[newPlayer].socket.on('move', (data) => playerMoveEvent(data, newPlayer));
