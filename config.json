@@ -1,0 +1,10 @@
+{
+    "GameSettings": {
+        "port": 1337,
+        "width": 40,
+        "height": 40,
+        "respawnTimer": 3000,
+        "startDelay": 2000,
+        "foodPlacement": 20000
+    }
+}
