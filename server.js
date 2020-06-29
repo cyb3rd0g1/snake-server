@@ -42,7 +42,7 @@ function validatePlayerPosition (position) {
 		 .....        Y + 1 & X + - 2
 		...X...       X + - 3
 		 .....        Y - 1 & X + - 2
-	          ...         Y - 2 & X + - 1
+	      ...         Y - 2 & X + - 1
 		   .          Y - 3
 	*/
 	// Huge if block to check if player is 2 to the left right up or down of an object.
